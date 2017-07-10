@@ -24,7 +24,6 @@ for pin in gpio_active_pins[:]:
 try:
  while(True):
   #pick a switch at random, and turn it on/off at random
-  
   pin_state = randint(0,1)
   this_pin = random.sample(gpio_active_pins,1)
   
@@ -36,7 +35,7 @@ try:
   #GPIO.output(random.sample(set([2,3,8,14,15,18,23,24]),1),randint(0,1))
   #GPIO.output(random.sample(gpio_active_pins,1),randint(0,1))
   
-  #sleep for a little bit between switch, not sure how fast this switch is at the moment
+  #sleep for a little bit between switches, not sure how fast this switch is at the moment
   time.sleep(.125)
 
 #CTRL-C to get us out of the loop  
