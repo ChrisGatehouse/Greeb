@@ -13,15 +13,17 @@ from queue import LifoQueue
 import time, random
 from random import randint
 from threading import Thread
+import threading
 import sys, os
 
 def main():
     print ("---- Greeb Main Menu ----")
     rt_q = LifoQueue()
-    rt = Thread(target=relayTest, name="relayThread", args=[rt_q])
+    pill2kill = threading.Event()
+    rt = Thread(target=relayTest, name="relayThread", args=[pill2kill, rt_q])
     rt.start()
     menu_loop = True
-    #print ("To exit enter 'x'" + "\nTo see current relay count enter 'r'")
+    print ("To exit enter 'x'" + "\nTo see current relay count enter 'r'")
     while menu_loop:#True:
       choice = input();
       if choice == "r":
@@ -29,18 +31,16 @@ def main():
         print("RelayCount is", str(relayCount))
       elif choice == "x":
         menu_loop = False
-        print("trying to exit...")
+        pill2kill.set()
         rt.join()
-        sys.exit(0)
-      print("...")
-    sys.exit(0)
+        GPIO.cleanup()
 
 '''
 This is a basic test of the 8 channel relay that is connected to the Raspberry Pi. 
 It sets of the GPIO and randomly cycles through the 8 channels of the relay.
 This logic will be used elsewhere in Greep to control the GPIO
 '''
-def relayTest(rt_q):
+def relayTest(stop_event, rt_q):
 #import RPi.GPIO as GPIO
 #import time, random
 #from random import randint
@@ -56,7 +56,7 @@ def relayTest(rt_q):
   GPIO.setup(pin, GPIO.OUT)
  i = 0
  try:
-  while(True):
+  while not stop_event.wait(.125):#(True):
   #pick a switch at random, and turn it on/off at random
    i = i + 1
    pin_state = randint(0,1)
@@ -71,7 +71,7 @@ def relayTest(rt_q):
   #GPIO.output(random.sample(gpio_active_pins,1),randint(0,1))
   
   #sleep for a little bit between switch, not sure how fast this switch is at the moment
-   time.sleep(.125)
+   #time.sleep(.125)
    rt_q.put(i)
 
 #CTRL-C to get us out of the loop  
@@ -79,7 +79,7 @@ def relayTest(rt_q):
   pass
 
 #clean up whatever channels we have open  
-GPIO.cleanup()  
+#GPIO.cleanup()  
 
 if __name__=='__main__':
     main()
