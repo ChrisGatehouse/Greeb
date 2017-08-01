@@ -7,6 +7,7 @@ from tkinter import *
 import sys, os
 import time, random
 import threading
+import logging
 from queue import Queue
 from queue import LifoQueue
 from random import randint
@@ -29,8 +30,22 @@ def temperatureSensor(stop_event, temperatureSensor_q):
             _sensorTemperature = _sensorTemperature / 1000
             temperatureSensor_q.put(celsius_to_fahrenheit(_sensorTemperature))
     else:
-        print("NO RASPBERRY PRESENT")
-        pass
+        logging.warning("NO RASPBERRY PRESENT")
+        logging.warning("using generic temperature counter")
+        i = 0
+        j = 0
+        while not stop_event.wait(.250):
+            if j == 0:
+                i = i + 1
+            else:
+                i = i - 1
+            if i > 100:
+                j = 1
+            if i <= 0:
+                j = 0
+            temperatureSensor_q.put(i)
+
+
 
 '''
 This is a basic test of the 8 channel relay that is connected to the Raspberry Pi. 
@@ -50,33 +65,32 @@ def relayStates(stop_event, relayStates_q):
         # print("Setting up pin", pin)
         GPIO.setup(pin, GPIO.OUT)
         i = 0
-        try:
-            while not stop_event.wait(.125):  # (True):
-                # pick a switch at random, and turn it on/off at random
-                i = i + 1  # counter for fun, just to display something to show thread is active
-                pin_state = randint(0, 1)
-                this_pin = random.sample(gpio_active_pins, 1)
+        while not stop_event.wait(.125):  # (True):
+            # pick a switch at random, and turn it on/off at random
+            i = i + 1  # counter for fun, just to display something to show thread is active
+            pin_state = randint(0, 1)
+            this_pin = random.sample(gpio_active_pins, 1)
 
-                #  print("Setting pin " + str(this_pin) + " to state " + str(pin_state))
-                GPIO.output(this_pin, pin_state)
+            #  print("Setting pin " + str(this_pin) + " to state " + str(pin_state))
+            GPIO.output(this_pin, pin_state)
+            # one liners but broken apart above to be easier to read
+            # GPIO.output(random.sample(gpio_active_pins,1),pin_state)
+            # GPIO.output(random.sample(set([2,3,8,14,15,18,23,24]),1),randint(0,1))
+            # GPIO.output(random.sample(gpio_active_pins,1),randint(0,1))
 
-                # one liners but broken apart above to be easier to read
-                # GPIO.output(random.sample(gpio_active_pins,1),pin_state)
-                # GPIO.output(random.sample(set([2,3,8,14,15,18,23,24]),1),randint(0,1))
-                # GPIO.output(random.sample(gpio_active_pins,1),randint(0,1))
-
-                # sleep for a little bit between switch, not sure how fast this switch is at the moment
-                # time.sleep(.125)
-                relayStates_q.put(i)
-        # CTRL-C to get us out of the loop
-        except (KeyboardInterrupt, SystemExit):
-            pass
+            relayStates_q.put(i)
   else:
       print("NO RASPBERRY PRESENT")
-      pass
+      print("using generic relayStates counter")
+      i = 0
+      while not stop_event.wait(.150):
+        i = i + 1
+        relayStates_q.put(i)
 
 
-# convert temperature in Celsius to Fahrenheit
+'''
+convert temperature in Celsius to Fahrenheit
+'''
 def celsius_to_fahrenheit(celsius):
     return (celsius * 1.8) + 32
 
@@ -92,8 +106,37 @@ class Gui(object):
         self.master.wm_title("Greeb in Tkinter")
         self.master.minsize(800, 480) #Official Raspberry Pi screen resolution
 
+        #define varibles to use in gui elements
+        self.currentTemp = StringVar()
+        self.genericRelayCounter = StringVar()
+        self.genericTemperatureCounter = StringVar()
+
+        relayLabel = Label(self.master, textvariable=self.genericRelayCounter, width=20)
+        relayLabel.place(x=150, y=150)
+
+        temperatureLabel = Label(self.master, textvariable=self.genericTemperatureCounter, width=20)
+        temperatureLabel.place(x=250, y=150)
+
+        #start the reading the queues, self schedules after this initial run
+        self.read_queues()
+        #self.read_queues_fast()
+
+    def read_queues(self):
+        self.genericRelayCounter.set(self.relayStates_q.get())
+        self.genericTemperatureCounter.set(self.temperatureSensor_q.get())
+
+        # schedule to run read queues again in x milliseconds
+        self.master.after(1000, self.read_queues)
+
+'''
+    #too fast for the UI
+    def read_queues_fast(self):
+       self.genericTemperatureCounter.set(self.temperatureSensor_q.get())
+       self.master.after(10,self.read_queues_fast)
+'''
 
 if __name__ == "__main__":
+    logging.basicConfig(format='%(message)s')
 
     #create queues
     relayStates_q = LifoQueue()
