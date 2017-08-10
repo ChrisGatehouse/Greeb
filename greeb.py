@@ -4,8 +4,8 @@
 #TODO Implement a config file to load any globals
 RASPBERRY_PRESENT = True #TODO implement a check to see if we are actually running on a Raspberry
 TEST_MODE = False
-HIGH_THRESHOLD = 91
-LOW_THRESHOLD = 89
+HIGH_THRESHOLD = 91.0
+LOW_THRESHOLD = 89.0
 
 from tkinter import *
 import sys
@@ -153,7 +153,7 @@ class Gui(object):
         # define variables to use in gui elements
         self.currentTemp = StringVar()
         self.genericRelayCounter = StringVar()
-        self.genericTemperatureCounter = IntVar()
+        self.genericTemperatureCounter = DoubleVar()
         self.heatState = StringVar()
         self.acState = StringVar()
         self.heatStateBG = StringVar()
@@ -165,15 +165,22 @@ class Gui(object):
         self.heatStateButton.place(x=350, y=75)
 
         self.acButton = Button(self.master, text="AC", state=DISABLED, width=5, disabledforeground="black")
-        self.acButton.place(x=300, y=250)
+        self.acButton.place(x=300, y=200)
         self.acStateButton = Button(self.master, textvariable=self.acState, width=10, state=DISABLED, disabledforeground="black")
-        self.acStateButton.place(x=350, y=250)
+        self.acStateButton.place(x=350, y=200)
 
-        self.relayLabel = Label(self.master, textvariable=self.genericRelayCounter, width=20)
-        self.relayLabel.place(x=150, y=150)
+        #self.relayLabel = Label(self.master, textvariable=self.genericRelayCounter, width=20)
+        #self.relayLabel.place(x=150, y=150)
 
-        self.temperatureLabel = Label(self.master, textvariable=self.genericTemperatureCounter, width=20)
-        self.temperatureLabel.place(x=250, y=150)
+        self.temperatureList = Listbox(self.master, width=3, height=5)
+        for item in [1, 2, 3, 4, 5]:
+            self.temperatureList.insert(END, item)
+        self.temperatureList.place(x=465,y=110)
+
+        self.currentTemperatureLabel = Label(self.master, text="Temperature", width=10)
+        self.currentTemperatureLabel.place(x=300, y=130)
+        self.temperatureLabel = Label(self.master, textvariable=self.genericTemperatureCounter)
+        self.temperatureLabel.place(x=300, y=150)
 
         # start the reading the queues, self schedules after this initial run
         logging.debug("reading queues")
@@ -221,7 +228,15 @@ class Gui(object):
         else:
             self.heatStateBG.set("red")
             self.heatStateButton.configure(bg="red")
-            
+    
+    def __set_highThreshold(self,threshold):
+        pass
+    
+    def __set_lowThreshold(self,threshold):
+        pass
+    
+    def __set_holdThreshold(self,threshold):
+        pass
 
     def __set_acState(self, state):
         self.acState.set(state)
