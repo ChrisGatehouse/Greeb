@@ -150,12 +150,10 @@ class Gui(object):
         self.master.minsize(800, 480)  # Official Raspberry Pi screen resolution
 
         #temperature thresholds
-        self.highThreshold = DoubleVar()
-        self.lowThreshold = DoubleVar()
-        #self.highThreshold = HIGH_THRESHOLD
-        #self.lowThreshold = LOW_THRESHOLD
-        self.highThreshold.set(HIGH_THRESHOLD)
-        self.lowThreshold.set(LOW_THRESHOLD)
+        #self.highThreshold = DoubleVar()
+        #self.lowThreshold = DoubleVar()
+        #self.highThreshold.set(HIGH_THRESHOLD)
+        #self.lowThreshold.set(LOW_THRESHOLD)
 
         # define variables to use in gui elements
         self.currentTemp = StringVar()
@@ -164,15 +162,23 @@ class Gui(object):
         self.heatState = StringVar()
         self.acState = StringVar()
         self.heatStateBG = StringVar()
-        self.acStateBG = StringVar()        
+        self.acStateBG = StringVar()
+        self.highThreshold = DoubleVar()
+        self.lowThreshold = DoubleVar()
+        
+        #temperature thresholds
+        self.highThreshold.set(HIGH_THRESHOLD)
+        self.lowThreshold.set(LOW_THRESHOLD)        
 
-        self.heatcurrentbutton = Button(self.master, textvariable=self.highThreshold, state=DISABLED, disabledforeground="black", width=5)
+        self.heatcurrentbutton = Button(self.master, textvariable=self.highThreshold, state=DISABLED, disabledforeground="black", width=3)
         self.heatcurrentbutton.place(x=250, y=75)
         self.heatButton = Button(self.master, text="HEAT", width=5, disabledforeground="black", command=self.set_heattemperature)
         self.heatButton.place(x=300, y=75)
         self.heatStateButton = Button(self.master, textvariable=self.heatState, width=10, state=DISABLED, disabledforeground="black")
         self.heatStateButton.place(x=350, y=75)
 
+        self.accurrentbutton = Button(self.master, textvariable=self.lowThreshold, state=DISABLED, disabledforeground="black", width=3)
+        self.accurrentbutton.place(x=250, y=200)
         self.acButton = Button(self.master, text="AC", width=5, disabledforeground="black", command=self.set_actemperature)
         self.acButton.place(x=300, y=200)
         self.acStateButton = Button(self.master, textvariable=self.acState, width=10, state=DISABLED, disabledforeground="black")
@@ -185,10 +191,10 @@ class Gui(object):
         #not the best place to do this, will slow down the UI generation
         #fahrenheit only at the moment
         i = 0
-        tempoffset = 40
+        tempoffset = 40.0
         temprange = [None] * 100
         while i < 61:
-            temprange.insert(i, i +tempoffset)
+            temprange.insert(i, i + tempoffset)
             i = i + 1
         for temp in temprange:
             self.temperatureList.insert(END, temp)
@@ -212,20 +218,28 @@ class Gui(object):
         #print("temp action")
         # Gpio.gpio_active_pins = [2, 3, 8, 14, 15, 18, 23, 24]
         # temp pin assignments AC=2, HEAT=3
-        if self.genericTemperatureCounter.get() > HIGH_THRESHOLD:
+        temp = self.genericTemperatureCounter.get()
+        if temp > HIGH_THRESHOLD and temp > LOW_THRESHOLD:
             logging.debug("Turning heat off")
             if not TEST_MODE and RASPBERRY_PRESENT:
                 relayStates_2(3,0)
                 relayStates_2(2,1) # Turn on AC, turn off HEAT
             self.__set_heatState("OFF")
             self.__set_acState("ON")
-        elif self.genericTemperatureCounter.get() < LOW_THRESHOLD:
+        elif temp < LOW_THRESHOLD and temp < HIGH_THRESHOLD:
             logging.debug("Turning heat on")
             if not TEST_MODE and RASPBERRY_PRESENT:
                 relayStates_2(2,0)
                 relayStates_2(3,1) # Turn on HEAT, turn off AC
             self.__set_heatState("ON")
             self.__set_acState("OFF")
+        else:
+            if not TEST_MODE and RASPBERRY_PRESENT:
+                relayStates_2(2,0)
+                relayStates_2(3,0) # Turn off HEAT, turn off AC, set to IDLE
+            self.__set_heatState("IDLE")
+            self.__set_acState("IDLE")
+        
         self.master.after(1000, self.temperatureAction)
 
 
