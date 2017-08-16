@@ -141,14 +141,21 @@ class Gui(object):
         self.relayStates_q = relayStates_q
         self.temperatureSensor_q = temperatureSensor_q
 
+        #globals
+        #global HIGH_THRESHOLD, LOW_THRESHOLD
+
         # setup gui window elements
         self.master = Tk()
         self.master.wm_title("Greeb in Tkinter")
         self.master.minsize(800, 480)  # Official Raspberry Pi screen resolution
 
         #temperature thresholds
-        self.highThreshold = HIGH_THRESHOLD
-        self.lowThreshold = LOW_THRESHOLD
+        self.highThreshold = DoubleVar()
+        self.lowThreshold = DoubleVar()
+        #self.highThreshold = HIGH_THRESHOLD
+        #self.lowThreshold = LOW_THRESHOLD
+        self.highThreshold.set(HIGH_THRESHOLD)
+        self.lowThreshold.set(LOW_THRESHOLD)
 
         # define variables to use in gui elements
         self.currentTemp = StringVar()
@@ -159,12 +166,14 @@ class Gui(object):
         self.heatStateBG = StringVar()
         self.acStateBG = StringVar()        
 
-        self.heatButton = Button(self.master, text="HEAT", state=DISABLED, width=5, disabledforeground="black")
+        self.heatcurrentbutton = Button(self.master, textvariable=self.highThreshold, state=DISABLED, disabledforeground="black", width=5)
+        self.heatcurrentbutton.place(x=250, y=75)
+        self.heatButton = Button(self.master, text="HEAT", width=5, disabledforeground="black", command=self.set_heattemperature)
         self.heatButton.place(x=300, y=75)
         self.heatStateButton = Button(self.master, textvariable=self.heatState, width=10, state=DISABLED, disabledforeground="black")
         self.heatStateButton.place(x=350, y=75)
 
-        self.acButton = Button(self.master, text="AC", state=DISABLED, width=5, disabledforeground="black")
+        self.acButton = Button(self.master, text="AC", width=5, disabledforeground="black", command=self.set_actemperature)
         self.acButton.place(x=300, y=200)
         self.acStateButton = Button(self.master, textvariable=self.acState, width=10, state=DISABLED, disabledforeground="black")
         self.acStateButton.place(x=350, y=200)
@@ -172,9 +181,17 @@ class Gui(object):
         #self.relayLabel = Label(self.master, textvariable=self.genericRelayCounter, width=20)
         #self.relayLabel.place(x=150, y=150)
 
-        self.temperatureList = Listbox(self.master, width=3, height=5)
-        for item in [1, 2, 3, 4, 5]:
-            self.temperatureList.insert(END, item)
+        self.temperatureList = Listbox(self.master, width=10, height=5)
+        #not the best place to do this, will slow down the UI generation
+        #fahrenheit only at the moment
+        i = 0
+        tempoffset = 40
+        temprange = [None] * 100
+        while i < 61:
+            temprange.insert(i, i +tempoffset)
+            i = i + 1
+        for temp in temprange:
+            self.temperatureList.insert(END, temp)
         self.temperatureList.place(x=465,y=110)
 
         self.currentTemperatureLabel = Label(self.master, text="Temperature", width=10)
@@ -252,6 +269,17 @@ class Gui(object):
 
     def get_acState(self):
         return self.acState.get()
+        
+    def set_heattemperature(self):
+        global HIGH_THRESHOLD 
+        HIGH_THRESHOLD = self.temperatureList.get(ACTIVE)
+        self.highThreshold.set(HIGH_THRESHOLD)
+    
+    def set_actemperature(self):
+        global LOW_THRESHOLD 
+        LOW_THRESHOLD = self.temperatureList.get(ACTIVE)
+        self.lowThreshold.set(LOW_THRESHOLD)
+
 
 
 '''setup 8-channel relay
