@@ -23,15 +23,21 @@ This is intended to be used with minimal setup of the software, below is what yo
 3. Python3.4
 4. An 8-channel 5V DC relay (tested with http://a.co/0LYsu2P)
 5. A DS18B20 temperature sensor. Setup is needed to enable on the Pi there are instructions here: http://www.circuitbasics.com/raspberry-pi-ds18b20-temperature-sensor-tutorial/
+6. A power supply to power any device you need to off of the relay board, otherwise you will connect it to your HVAC relay leads
 
 # Planned features
 This is a list of features that currently don't exist or enhancements to existing features
+
 -Move the data that is currently stored in queues to a database (enhancement)
+
+-Learning algoritm to predict heating and cooling times during the day (new)
+
 -Automation based on external conditions i.e. HVAC based on weather, lighting based on time (new)
+
 -Wemo device control either custom implementation or use https://github.com/iancmcc/ouimeaux (new)
 
 # Known issues
--Setting a Heat value higher then current temperature and an AC value higher than current temperature sets the system to IDLE
+-Setting a Heat value higher then current temperature and an AC value higher than current temperature sets the system to IDLE the display is misleading
 
 -TEST_MODE is no longer working correctly
 
