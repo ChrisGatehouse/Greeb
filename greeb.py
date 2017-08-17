@@ -3,9 +3,9 @@
 
 #TODO Implement a config file to load any globals
 RASPBERRY_PRESENT = True #TODO implement a check to see if we are actually running on a Raspberry
-TEST_MODE = False
-HIGH_THRESHOLD = 91.0
-LOW_THRESHOLD = 89.0
+TEST_MODE = False #some conditions prevent test mode from working correctly
+HIGH_THRESHOLD = 40.0
+LOW_THRESHOLD = 100.0
 
 from tkinter import *
 import sys
@@ -23,9 +23,8 @@ from random import randint
 from weather import Weather
 from HVACStates import HVACStates
 
-# https://pypi.python.org/pypi/RPi.GPIO
 if RASPBERRY_PRESENT:
-    import RPi.GPIO as GPIO
+    from Gpio import Gpio
 
 
 '''temperatureSensor gets the temperature from the sensor and adds the result to the queue'''
@@ -40,21 +39,21 @@ def temperatureSensor(stop_event, temperatureSensor_q):
                 _tempFile.close()
                 _data = _readFile.split("\n")[1].split(" ")[9]
                 _sensorTemperature = float(_data[2:]) / 1000
-                #_sensorTemperature = _sensorTemperature / 1000
                 _sensorTemperature = float("{0:.1f}".format((celsius_to_fahrenheit(_sensorTemperature))))
-                #_sensorTemperature = format_float(celsius_to_fahrenheit(_sensorTemperature),2)
                 temperatureSensor_q.put(_sensorTemperature)
-        else:
+        else: #if we set TEST_MODE then start a quick counter to go through temperature faster
+            i = 0
+            j = 0
             while not stop_event.wait(0):  # how often should we bother getting the temperature...
-                _tempFile = open("/sys/bus/w1/devices/28-000008e0f944/w1_slave")  #TODO clean this up to work with multiple sensors
-                _readFile = _tempFile.read()
-                _tempFile.close()
-                _data = _readFile.split("\n")[1].split(" ")[9]
-                _sensorTemperature = float(_data[2:]) / 1000
-                #_sensorTemperature = _sensorTemperature / 1000
-                _sensorTemperature = float("{0:.1f}".format((celsius_to_fahrenheit(_sensorTemperature))))
-                #_sensorTemperature = format_float(celsius_to_fahrenheit(_sensorTemperature),2)
-                temperatureSensor_q.put(_sensorTemperature)
+                if j == 0:
+                    i = i + 1
+                else:
+                    i = i - 1
+                if i > 100:
+                    j = 1
+                if i <= 0:
+                    j = 0
+                temperatureSensor_q.put(i)
     else:
         logging.warning("NO RASPBERRY PRESENT!")
         logging.warning("using generic temperature up-down counter")
@@ -95,9 +94,10 @@ def relayStates(stop_event, relayStates_q):
                 # pick a switch at random, and turn it on/off at random
                 i = i + 1  # counter just to display something to show thread is active
                 pin_state = randint(0, 1)
-                this_pin = Gpio.get_random_pin(gp)
-                logging.debug("Setting pin " + str(this_pin) + " to state " + str(pin_state))
-                Gpio.set_output(gp, this_pin, pin_state)
+                #this_pin = Gpio.get_random_pin(gp)
+                #logging.debug("Setting pin " + str(this_pin) + " to state " + str(pin_state))
+                #Gpio.set_output(gp, this_pin, pin_state)
+                
                 relayStates_q.put(i)
     else:
         logging.warning("NO RASPBERRY PRESENT!")
@@ -135,6 +135,8 @@ class Gui(object):
         self.weather = StringVar()
         self.weatherTemperature = StringVar()
         self.weatherTemperature_float = DoubleVar()
+        self.sunrise = StringVar()
+        self.sunset = StringVar()
         self.currentTemp = StringVar()
         self.genericRelayCounter = StringVar()
         self.genericTemperatureCounter = DoubleVar()
@@ -152,26 +154,45 @@ class Gui(object):
         #Weather
         self.currentWeatherLabel = Label(self.master, text="Current Conditions")
         self.currentWeatherLabel.place(x=10, y=110)
-        self.currentWeatherLabel = Label(self.master, textvariable=self.city, justify='center', anchor='center')
-        self.currentWeatherLabel.place(x=10, y=130)
-        self.weatherLabel = Label(self.master, textvariable=self.weatherTemperature, justify='center', anchor='center')
-        self.weatherLabel.place(x=10, y=150)
+        
         self.cityLabel = Label(self.master, textvariable=self.weather, justify='center', anchor='center')
         self.cityLabel.place(x=10, y=170)
+        
+        self.weatherLabel = Label(self.master, textvariable=self.weatherTemperature, justify='center', anchor='center')
+        self.weatherLabel.place(x=10, y=150)
+        
+        self.currentWeatherLabel = Label(self.master, textvariable=self.city, justify='center', anchor='center')
+        self.currentWeatherLabel.place(x=10, y=130)
+        
+        self.sunriseLabel = Label(self.master, text="Sunrise")
+        self.sunriseLabel.place(x=10, y=200)
+        
+        self.currentSunriseLabel = Label(self.master, textvariable=self.sunrise)
+        self.currentSunriseLabel.place(x=10, y=225)
+        
+        self.sunriseLabel = Label(self.master, text="Sunset")
+        self.sunriseLabel.place(x=100, y=200)
+        
+        self.currentSunriseLabel = Label(self.master, textvariable=self.sunset)
+        self.currentSunriseLabel.place(x=100, y=225)
         
         #HEATING
         self.heatcurrentbutton = Button(self.master, textvariable=self.highThreshold, state=DISABLED, disabledforeground="black", width=3)
         self.heatcurrentbutton.place(x=250, y=75)
+        
         self.heatButton = Button(self.master, text="HEAT", justify='left', width=5, disabledforeground="black", command=self.set_heattemperature)
         self.heatButton.place(x=300, y=75)
+        
         self.heatStateButton = Button(self.master, textvariable=self.heatState, width=10, state=DISABLED, disabledforeground="black")
         self.heatStateButton.place(x=350, y=75)
 
         #COOLING
         self.accurrentbutton = Button(self.master, textvariable=self.lowThreshold, state=DISABLED, disabledforeground="black", width=3)
         self.accurrentbutton.place(x=250, y=200)
+        
         self.acButton = Button(self.master, text="AC", width=5, disabledforeground="black", command=self.set_actemperature)
         self.acButton.place(x=300, y=200)
+        
         self.acStateButton = Button(self.master, textvariable=self.acState, width=10, state=DISABLED, disabledforeground="black")
         self.acStateButton.place(x=350, y=200)
 
@@ -193,6 +214,7 @@ class Gui(object):
 
         self.currentTemperatureLabel = Label(self.master, text="Temperature", width=10)
         self.currentTemperatureLabel.place(x=300, y=130)
+        
         self.temperatureLabel = Label(self.master, textvariable=self.genericTemperatureCounter)
         self.temperatureLabel.place(x=300, y=150)
 
@@ -214,21 +236,21 @@ class Gui(object):
         if temp > HIGH_THRESHOLD and temp > LOW_THRESHOLD:
             logging.debug("Turning heat off")
             if not TEST_MODE and RASPBERRY_PRESENT:
-                relayStates_2(3,0)
-                relayStates_2(2,1) # Turn on AC, turn off HEAT
+                relayStates_2(3,1)
+                relayStates_2(2,0) # Turn on AC, turn off HEAT
             self.__set_heatState("OFF")
             self.__set_acState("ON")
         elif temp < LOW_THRESHOLD and temp < HIGH_THRESHOLD:
             logging.debug("Turning heat on")
             if not TEST_MODE and RASPBERRY_PRESENT:
-                relayStates_2(2,0)
-                relayStates_2(3,1) # Turn on HEAT, turn off AC
+                relayStates_2(2,1)
+                relayStates_2(3,0) # Turn on HEAT, turn off AC
             self.__set_heatState("ON")
             self.__set_acState("OFF")
         else:
             if not TEST_MODE and RASPBERRY_PRESENT:
-                relayStates_2(2,0)
-                relayStates_2(3,0) # Turn off HEAT, turn off AC, set to IDLE
+                relayStates_2(2,1)
+                relayStates_2(3,1) # Turn off HEAT, turn off AC, set to IDLE
             self.__set_heatState("IDLE")
             self.__set_acState("IDLE")
         
@@ -248,7 +270,9 @@ class Gui(object):
         self.weatherTemperature_float.set(weather.get_tempf_float())
         self.city.set(weather.get_city())
         self.weather.set(weather.get_weather())
-        #schedule to run agian in 3 minutes, limit of 500 requests per day to api
+        self.sunrise.set(weather.get_sunrise())
+        self.sunset.set(weather.get_sunset())
+        #schedule to run again in 3 minutes, limit of 500 requests per day to api
         self.master.after(180000,self.get_weather)
 
     def __set_heatState(self, state):
@@ -293,34 +317,6 @@ class Gui(object):
         global LOW_THRESHOLD 
         LOW_THRESHOLD = self.temperatureList.get(ACTIVE)
         self.lowThreshold.set(LOW_THRESHOLD)
-
-
-
-'''setup 8-channel relay
-change the GPIO values if the wiring changes
-'''
-
-
-class Gpio(object):
-    gpio_active_pins = None
-
-    def __init__(self):
-        GPIO.setwarnings(False)
-        GPIO.setmode(GPIO.BCM)
-
-        Gpio.gpio_active_pins = [2, 3, 8, 14, 15, 18, 23, 24]
-        for pin in Gpio.gpio_active_pins[:]:
-            logging.debug("Setting up pin", pin)
-            GPIO.setup(pin, GPIO.OUT, initial=GPIO.HIGH)
-
-    def set_output(self, pin, state):
-        GPIO.output(pin, state)
-
-    def get_random_pin(self):
-        return random.sample(Gpio.gpio_active_pins, 1)
-
-    def cleanup_io(self):
-        GPIO.cleanup()
 
 
 if __name__ == "__main__":
