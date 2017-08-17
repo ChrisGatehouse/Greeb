@@ -36,6 +36,8 @@ This is a list of features that currently don't exist or enhancements to existin
 
 -Wemo device control either custom implementation or use https://github.com/iancmcc/ouimeaux (new)
 
+-API (RESTful) for remote access
+
 # Known issues
 -Setting a Heat value higher then current temperature and an AC value higher than current temperature sets the system to IDLE the display is misleading
 
