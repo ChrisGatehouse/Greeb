@@ -41,6 +41,8 @@ This is a list of features that currently don't exist or enhancements to existin
 
 -Wemo device control either custom implementation or use https://github.com/iancmcc/ouimeaux (new)
 
+-Load configurations with config files (we don't want to edit code/globals all the time)
+
 -API (RESTful) for remote access
 
 # Known issues
