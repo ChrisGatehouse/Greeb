@@ -10,7 +10,7 @@ This project is written in Python3, and is a continuous work in progress. Python
 You can find a quick demo of Greeb in its current state here: https://youtu.be/_FIS6iQvN7s
 
 # Motivation
-I have seen many differnt home automation systems. The problem is commericial systems are always lacking in some feature that you want either because it doesn't fit in their ecosystem or it is outside of their scope. Other open source projects seem to die off quickly or are only addressing specific problem areas.
+I have seen many differnt home automation systems. The problem is commericial systems are always lacking in some feature that you want either because it doesn't fit in their ecosystem or it is outside of their scope. Some systems may have one feature but another product of the same type is missing the feature but has another useful feature. Other open source projects seem to die off quickly or are only addressing specific problem areas.
 
 # Week 3 Project Status
 Parts have arrived and making progress on connecting and using the hardware with the Pi. 
@@ -26,6 +26,9 @@ This is intended to be used with minimal setup of the software, below is what yo
 4. An 8-channel 5V DC relay (tested with http://a.co/0LYsu2P)
 5. A DS18B20 temperature sensor. Setup is needed to enable on the Pi there are instructions here: http://www.circuitbasics.com/raspberry-pi-ds18b20-temperature-sensor-tutorial/
 6. A power supply to power any device you need to off of the relay board, otherwise you will connect it to your HVAC relay leads
+
+# Running Greeb
+Greeb should be able to run from any location to which you copy it. Make sure the files are executable. Start Greeb by running greeb.py
 
 # Planned features
 This is a list of features that currently don't exist or enhancements to existing features
