@@ -10,12 +10,6 @@ This project is written in Python3, and is a continuous work in progress. Python
 # Motivation
 I have seen many differnt home automation systems. The problem is commericial systems are always lacking in some feature that you want either because it doesn't fit in their ecosystem or it is outside of their scope. Some systems may have one feature but another product of the same type is missing the feature but has another useful feature. Other open source projects seem to die off quickly or are only addressing specific problem areas.
 
-# Week 3 Project Status
-Parts have arrived and making progress on connecting and using the hardware with the Pi. 
-Working on the menu system of Greeb, the intent is to have a forward facing menu running in Python for now while all logic, hardware and sensors run in background threads.
-Menu currently works only with the relay switch and while it correctly gets values from the threads queue it has trouble exiting.
-The next thread that will be started is the temperature sensor and hopefully have that tied in to controlling relay actions soon.
-
 # Build Instructions / Installation
 This is intended to be used with minimal setup of the software, below is what you'll need to get started.
 1. Raspbery Pi 2 or 3 (tested with Raspberry Pi 3)
