@@ -1,6 +1,6 @@
 # Greeb
 
-Copyright © 2017 Chris Gatehouse
+Copyright © 2023 Chris Gatehouse
 
 Greeb is a home automation suite powered by the Raspberry Pi.
 It is intended to easlily run any device that can either be physically connected the pi or connected through a network i.e. the internet or home. Interaction is done through the devices API if one is available otherwise another method will be devised.
