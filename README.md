@@ -7,8 +7,6 @@ It is intended to easlily run any device that can either be physically connected
 
 This project is written in Python3, and is a continuous work in progress. Python3 was chosen as it has many libraries availble or the Raspberry and also documentation to allow for easy implementation of new features. It was also chosen as a learning expierence to force my learning of the Python language. 
 
-You can find a quick demo of Greeb in its current state here: https://youtu.be/_FIS6iQvN7s
-
 # Motivation
 I have seen many differnt home automation systems. The problem is commericial systems are always lacking in some feature that you want either because it doesn't fit in their ecosystem or it is outside of their scope. Some systems may have one feature but another product of the same type is missing the feature but has another useful feature. Other open source projects seem to die off quickly or are only addressing specific problem areas.
 
